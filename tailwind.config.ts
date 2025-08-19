@@ -52,6 +52,21 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				lesson: {
+					complete: 'hsl(var(--lesson-complete))',
+					locked: 'hsl(var(--lesson-locked))',
+					active: 'hsl(var(--lesson-active))'
+				},
+				streak: 'hsl(var(--streak-fire))',
+				xp: 'hsl(var(--xp-gold))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

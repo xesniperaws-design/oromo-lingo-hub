@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
 import { 
   BookOpen, 
   Star, 
@@ -17,10 +18,34 @@ import {
 
 const LearnDashboard = () => {
   const { language } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [streak, setStreak] = useState(7);
   const [xp, setXp] = useState(1250);
   const [dailyGoal] = useState(50);
   const [todayXp, setTodayXp] = useState(30);
+  const [completedLessons, setCompletedLessons] = useState<number[]>([1, 2]);
+
+  // Handle lesson completion from navigation state
+  useEffect(() => {
+    if (location.state?.lessonCompleted) {
+      const lessonId = parseInt(location.state.lessonCompleted);
+      const earnedXp = location.state.xpEarned || 0;
+      const correctAnswers = location.state.correctAnswers || 0;
+      
+      setCompletedLessons(prev => [...new Set([...prev, lessonId])]);
+      setXp(prev => prev + earnedXp);
+      setTodayXp(prev => prev + earnedXp);
+      
+      toast({
+        title: "Lesson Completed! 🎉",
+        description: `You earned ${earnedXp} XP and got ${correctAnswers} questions correct!`,
+      });
+      
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const languageNames: { [key: string]: string } = {
     oromo: "Oromo",
@@ -129,30 +154,41 @@ const LearnDashboard = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-4">
-                    {unit.lessons.map((lesson) => (
-                      <Button
-                        key={lesson.id}
-                        variant={lesson.completed ? "default" : lesson.current ? "secondary" : "outline"}
-                        size="lg"
-                        className={`relative ${
-                          lesson.completed 
-                            ? "bg-success hover:bg-success/90" 
-                            : lesson.current 
-                            ? "bg-lesson-active hover:bg-lesson-active/90 text-white" 
-                            : "opacity-60"
-                        }`}
-                        disabled={!lesson.completed && !lesson.current}
-                      >
-                        {lesson.completed ? (
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                        ) : lesson.current ? (
-                          <Play className="h-4 w-4 mr-2" />
-                        ) : (
-                          <Lock className="h-4 w-4 mr-2" />
-                        )}
-                        {lesson.title}
-                      </Button>
-                    ))}
+                    {unit.lessons.map((lesson) => {
+                      const isCompleted = completedLessons.includes(lesson.id);
+                      const isCurrent = !isCompleted && (lesson.id === 3 || completedLessons.includes(lesson.id - 1));
+                      const isLocked = !isCompleted && !isCurrent;
+                      
+                      return (
+                        <Button
+                          key={lesson.id}
+                          variant={isCompleted ? "default" : isCurrent ? "secondary" : "outline"}
+                          size="lg"
+                          className={`relative ${
+                            isCompleted 
+                              ? "bg-success hover:bg-success/90" 
+                              : isCurrent 
+                              ? "bg-lesson-active hover:bg-lesson-active/90 text-white" 
+                              : "opacity-60"
+                          }`}
+                          disabled={isLocked}
+                          onClick={() => {
+                            if (!isLocked) {
+                              navigate(`/learn/${language}/lesson/${lesson.id}`);
+                            }
+                          }}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                          ) : isCurrent ? (
+                            <Play className="h-4 w-4 mr-2" />
+                          ) : (
+                            <Lock className="h-4 w-4 mr-2" />
+                          )}
+                          {lesson.title}
+                        </Button>
+                      );
+                    })}
                   </div>
                 </Card>
               ))}
